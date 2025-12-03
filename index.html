@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COVID-19 Global Trends | Data Visualization Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- Topojson for maps -->
+    <script src="https://unpkg.com/topojson@3"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="covid-icon">🦠</span>
+                COVID-19 Dashboard
+            </div>
+            <div class="nav-info">
+                <span id="last-updated">Loading data...</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header Section -->
+        <header class="header">
+            <h1>Global COVID-19 Trends Visualization</h1>
+            <p class="subtitle">Explore real-time pandemic data across 200+ countries through interactive visualizations</p>
+        </header>
+
+        <!-- Controls Section -->
+        <section class="controls-section">
+            <div class="control-group">
+                <label for="metric-select">Select Metric:</label>
+                <select id="metric-select">
+                    <option value="cases">Total Cases</option>
+                    <option value="deaths">Total Deaths</option>
+                    <option value="recovered">Total Recovered</option>
+                    <option value="active">Active Cases</option>
+                    <option value="casesPerMillion">Cases per Million</option>
+                    <option value="deathsPerMillion">Deaths per Million</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="country-search">Search Country:</label>
+                <input type="text" id="country-search" placeholder="Type country name...">
+            </div>
+
+            <div class="control-group">
+                <label for="continent-filter">Filter by Continent:</label>
+                <select id="continent-filter">
+                    <option value="all">All Continents</option>
+                    <option value="Asia">Asia</option>
+                    <option value="Europe">Europe</option>
+                    <option value="Africa">Africa</option>
+                    <option value="North America">North America</option>
+                    <option value="South America">South America</option>
+                    <option value="Oceania">Oceania</option>
+                </select>
+            </div>
+
+            <button id="reset-btn" class="btn-reset">Reset Filters</button>
+        </section>
+
+        <!-- Global Stats Cards -->
+        <section class="stats-section">
+            <div class="stat-card" id="total-cases-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-content">
+                    <h3>Total Cases</h3>
+                    <p class="stat-number" id="global-cases">-</p>
+                    <span class="stat-change" id="cases-today">-</span>
+                </div>
+            </div>
+
+            <div class="stat-card" id="total-deaths-card">
+                <div class="stat-icon">💔</div>
+                <div class="stat-content">
+                    <h3>Total Deaths</h3>
+                    <p class="stat-number" id="global-deaths">-</p>
+                    <span class="stat-change" id="deaths-today">-</span>
+                </div>
+            </div>
+
+            <div class="stat-card" id="total-recovered-card">
+                <div class="stat-icon">💚</div>
+                <div class="stat-content">
+                    <h3>Total Recovered</h3>
+                    <p class="stat-number" id="global-recovered">-</p>
+                    <span class="stat-change" id="recovered-today">-</span>
+                </div>
+            </div>
+
+            <div class="stat-card" id="active-cases-card">
+                <div class="stat-icon">⚠️</div>
+                <div class="stat-content">
+                    <h3>Active Cases</h3>
+                    <p class="stat-number" id="global-active">-</p>
+                    <span class="stat-change">Currently infected</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Visualization Sections -->
+        <div class="viz-grid">
+            <!-- World Map Choropleth -->
+            <section class="viz-section full-width">
+                <div class="viz-header">
+                    <h2>🗺️ Global Distribution Map</h2>
+                    <p>Interactive choropleth showing COVID-19 impact worldwide</p>
+                </div>
+                <div id="world-map" class="visualization"></div>
+                <div class="map-legend" id="map-legend"></div>
+            </section>
+
+            <!-- Top Countries Bar Chart -->
+            <section class="viz-section">
+                <div class="viz-header">
+                    <h2>📊 Top 20 Countries</h2>
+                    <p>Countries most affected by selected metric</p>
+                </div>
+                <div id="bar-chart" class="visualization"></div>
+            </section>
+
+            <!-- Timeline Chart -->
+            <section class="viz-section">
+                <div class="viz-header">
+                    <h2>📈 Trend Timeline</h2>
+                    <p>Daily progression of cases over time</p>
+                </div>
+                <div id="timeline-chart" class="visualization"></div>
+            </section>
+
+            <!-- Scatter Plot -->
+            <section class="viz-section">
+                <div class="viz-header">
+                    <h2>🎯 Cases vs Deaths Correlation</h2>
+                    <p>Relationship between total cases and deaths</p>
+                </div>
+                <div id="scatter-plot" class="visualization"></div>
+            </section>
+
+            <!-- Pie Chart - Continental Distribution -->
+            <section class="viz-section">
+                <div class="viz-header">
+                    <h2>🥧 Continental Distribution</h2>
+                    <p>Cases distributed across continents</p>
+                </div>
+                <div id="pie-chart" class="visualization"></div>
+            </section>
+        </div>
+
+        <!-- Data Table -->
+        <section class="table-section">
+            <div class="viz-header">
+                <h2>📋 Detailed Country Data</h2>
+                <p>Sortable table with comprehensive statistics</p>
+            </div>
+            <div class="table-controls">
+                <input type="text" id="table-search" placeholder="Search in table...">
+                <button id="export-csv" class="btn-export">Export CSV</button>
+            </div>
+            <div class="table-container">
+                <table id="data-table">
+                    <thead>
+                        <tr>
+                            <th data-sort="country">Country</th>
+                            <th data-sort="continent">Continent</th>
+                            <th data-sort="cases">Cases</th>
+                            <th data-sort="todayCases">Today</th>
+                            <th data-sort="deaths">Deaths</th>
+                            <th data-sort="recovered">Recovered</th>
+                            <th data-sort="active">Active</th>
+                            <th data-sort="casesPerMillion">Cases/1M</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p><strong>Data Source:</strong> <a href="https://disease.sh" target="_blank">disease.sh API</a> - Open Disease Data</p>
+                <p><strong>Built with:</strong> React concepts, D3.js, Vanilla JavaScript</p>
+                <p><strong>Created by:</strong> Vishnu Sai Padyala | <a href="mailto:padyalavishnusai@ufl.edu">padyalavishnusai@ufl.edu</a></p>
+                <p class="disclaimer">⚠️ This is an educational project. For official COVID-19 information, please visit WHO or CDC websites.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Loading COVID-19 data...</p>
+    </div>
+
+    <!-- Tooltip -->
+    <div id="tooltip" class="tooltip"></div>
+
+    <!-- Main JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>
